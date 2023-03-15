@@ -1,4 +1,4 @@
-enum TokenKind {
+pub enum TokenKind {
     TK_RESERVED,
     TK_NUM,
     TK_EOF,

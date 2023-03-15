@@ -1,5 +1,7 @@
 use std::env;
 use compiler::tokenizer::token;
+use compiler::node::node;
+use compiler::parser::parser;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -30,5 +32,6 @@ fn main() {
             println!("  sub rax, {}", tokens.expect_number());
         }
     }
+
     println!("  ret");
 }
