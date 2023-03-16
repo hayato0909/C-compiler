@@ -25,16 +25,27 @@ impl Parser {
     }
 
     pub fn mul(&mut self) -> Node {
-        let mut node: Node = self.primary();
+        let mut node: Node = self.unary();
 
         loop {
             if self.tokens.consume(String::from("*")) {
-                node = new_node(NodeKind::ND_MUL, node, self.primary());
+                node = new_node(NodeKind::ND_MUL, node, self.unary());
             } else if self.tokens.consume(String::from("/")) {
-                node = new_node(NodeKind::ND_DIV, node, self.primary());
+                node = new_node(NodeKind::ND_DIV, node, self.unary());
             } else {
                 return node;
             }
+        }
+    }
+
+    pub fn unary(&mut self) -> Node {
+        if self.tokens.consume(String::from("+")) {
+            return self.primary();
+        } else if self.tokens.consume(String::from("-")) {
+            let node = new_node(NodeKind::ND_SUB, new_node_num(0), self.primary());
+            return node;
+        } else {
+            return self.primary();
         }
     }
 
