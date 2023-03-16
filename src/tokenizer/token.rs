@@ -36,16 +36,21 @@ impl Tokens {
 
     pub fn tokenize(&mut self, v: Vec<char>) {
         let mut num: i32 = 0;
+        let mut num_flag: bool = false;
         for c in v {
             if c == ' ' {
                 continue;
-            } else if c == '+' || c == '-' {
-                let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
-                self.add_token(num_token);
+            } else if c == '+' || c == '-' || c == '*' || c == '/' || c == ')' || c == '(' {
+                if num_flag {
+                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
+                    self.add_token(num_token);
+                    num = 0;
+                    num_flag = false;
+                }
                 let token = Token{kind:TokenKind::TK_RESERVED, val:0, s:c.to_string()};
                 self.add_token(token);
-                num = 0;
             } else if '0' <= c && c <= '9' {
+                num_flag = true;
                 num = num * 10 + (c as i32 - '0' as i32);
             } else {
                 panic!("予期しない文字です: {}", c);

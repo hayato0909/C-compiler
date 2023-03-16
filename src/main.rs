@@ -14,11 +14,17 @@ fn main() {
     let mut tokens: token::Tokens = token::Tokens::new();
     // トークナイズする
     tokens.tokenize(v);
+    let mut parser: parser::Parser = parser::Parser::new(tokens);
+    let node: node::Node = parser.expr();
 
     // アセンブリの前半部分を出力
     println!(".intel_syntax noprefix");
     println!(".globl main");
     println!("main:");
+
+    gen(node);
+
+    /*
 
     // 最初のmov命令を出力
     println!("  mov rax, {}", tokens.expect_number());
@@ -32,6 +38,35 @@ fn main() {
             println!("  sub rax, {}", tokens.expect_number());
         }
     }
+    */
 
+    println!("  pop rax");
     println!("  ret");
+}
+
+fn gen(node: node::Node) {
+    let kind: node::NodeKind = node.kind;
+    if matches!(kind, node::NodeKind::ND_NUM) {
+        println!("  push {}", node.val.unwrap());
+        return;
+    }
+
+    gen(*node.lhs.unwrap());
+    gen(*node.rhs.unwrap());
+
+    println!("  pop rdi");
+    println!("  pop rax");
+
+    match kind {
+        node::NodeKind::ND_ADD => { println!("  add rax, rdi"); },
+        node::NodeKind::ND_SUB => { println!("  sub rax, rdi"); },
+        node::NodeKind::ND_MUL => { println!("  imul rax, rdi"); },
+        node::NodeKind::ND_DIV => {
+            println!("  cqo");
+            println!("  idiv rdi");
+        },
+        _ => {},
+    }
+
+    println!("  push rax");
 }
