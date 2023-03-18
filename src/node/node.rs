@@ -1,9 +1,13 @@
 pub enum NodeKind {
-    ND_ADD,
-    ND_SUB,
-    ND_MUL,
-    ND_DIV,
-    ND_NUM,
+    ND_ADD, // +
+    ND_SUB, // -
+    ND_MUL, // *
+    ND_DIV, // /
+    ND_NUM, // integer
+    ND_NQ, // ==
+    ND_NE, // !=
+    ND_LT, // <
+    ND_LE, // <=
 }
 
 pub struct Node {

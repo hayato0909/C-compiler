@@ -24,22 +24,6 @@ fn main() {
 
     gen(node);
 
-    /*
-
-    // 最初のmov命令を出力
-    println!("  mov rax, {}", tokens.expect_number());
-
-    // '+ <数>' または '- <数>'というトークン列を消費
-    while !tokens.is_EOF() {
-        if tokens.consume(String::from("+")) {
-            println!("  add rax, {}", tokens.expect_number());
-        } else {
-            tokens.expect(String::from("-"));
-            println!("  sub rax, {}", tokens.expect_number());
-        }
-    }
-    */
-
     println!("  pop rax");
     println!("  ret");
 }
@@ -64,6 +48,26 @@ fn gen(node: node::Node) {
         node::NodeKind::ND_DIV => {
             println!("  cqo");
             println!("  idiv rdi");
+        },
+        node::NodeKind::ND_NQ => {
+            println!("  cmp rax, rdi");
+            println!("  sete al");
+            println!("  movzb rax, al");
+        },
+        node::NodeKind::ND_NE => {
+            println!("  cmp rax, rdi");
+            println!("  setne al");
+            println!("  movzb rax, al");
+        },
+        node::NodeKind::ND_LT => {
+            println!("  cmp rax, rdi");
+            println!("  setl al");
+            println!("  movzb rax, al");
+        },
+        node::NodeKind::ND_LE => {
+            println!("  cmp rax, rdi");
+            println!("  setle al");
+            println!("  movzb rax, al");
         },
         _ => {},
     }

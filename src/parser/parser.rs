@@ -11,6 +11,38 @@ impl Parser {
     }
 
     pub fn expr(&mut self) -> Node {
+        return self.equality();
+    }
+
+    pub fn equality(&mut self) -> Node {
+        let mut node: Node = self.relational();
+
+        if self.tokens.consume(String::from("==")) {
+            node = new_node(NodeKind::ND_NQ, node, self.relational());
+        } else if self.tokens.consume(String::from("!=")) {
+            node = new_node(NodeKind::ND_NE, node, self.relational());
+        }
+
+        return node;
+    }
+
+    pub fn relational(&mut self) -> Node {
+        let mut node: Node = self.add();
+
+        if self.tokens.consume(String::from("<")) {
+            node = new_node(NodeKind::ND_LT, node, self.add());
+        } else if self.tokens.consume(String::from(">")) {
+            node = new_node(NodeKind::ND_LT, self.add(), node);
+        } else if self.tokens.consume(String::from("<=")) {
+            node = new_node(NodeKind::ND_LE, node, self.add());
+        } else if self.tokens.consume(String::from(">=")) {
+            node = new_node(NodeKind::ND_LE, self.add(), node);
+        }
+
+        return node;
+    }
+
+    pub fn add(&mut self) -> Node {
         let mut node: Node = self.mul();
 
         loop {

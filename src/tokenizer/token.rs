@@ -37,7 +37,13 @@ impl Tokens {
     pub fn tokenize(&mut self, v: Vec<char>) {
         let mut num: i32 = 0;
         let mut num_flag: bool = false;
-        for c in v {
+        let mut skip: bool = false;
+        for i in 0..v.len() {
+            if skip { 
+                skip = false;
+                continue; 
+            }
+            let c = v[i];
             if c == ' ' {
                 continue;
             } else if c == '+' || c == '-' || c == '*' || c == '/' || c == ')' || c == '(' {
@@ -48,6 +54,34 @@ impl Tokens {
                     num_flag = false;
                 }
                 let token = Token{kind:TokenKind::TK_RESERVED, val:0, s:c.to_string()};
+                self.add_token(token);
+            } else if c == '<' || c == '>' {
+                if num_flag {
+                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
+                    self.add_token(num_token);
+                    num = 0;
+                    num_flag = false;
+                }
+                let mut s: String = c.to_string();
+                if i + 1 < v.len() && v[i+1] == '=' {
+                    s += &v[i+1].to_string();
+                    skip = true;
+                }
+                let token = Token{kind:TokenKind::TK_RESERVED, val:0, s:s};
+                self.add_token(token);
+            } else if c == '=' || c == '!' {
+                if num_flag {
+                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
+                    self.add_token(num_token);
+                    num = 0;
+                    num_flag = false;
+                }
+                let mut s: String = c.to_string();
+                if i + 1 < v.len() && v[i+1] == '=' {
+                    s += &v[i+1].to_string();
+                    skip = true;
+                }
+                let token = Token{kind:TokenKind::TK_RESERVED, val:0, s:s};
                 self.add_token(token);
             } else if '0' <= c && c <= '9' {
                 num_flag = true;
