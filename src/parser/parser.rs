@@ -1,5 +1,5 @@
 use crate::tokenizer::token;
-use crate::node::node::{Node, NodeKind, new_node, new_node_num};
+use crate::node::node::{Node, NodeKind, new_node, new_node_num, new_node_ident};
 
 pub struct Parser {
     tokens: token::Tokens,
@@ -10,8 +10,30 @@ impl Parser {
         Parser{tokens: tokens}
     }
 
+    pub fn program(&mut self) -> Vec<Node> {
+        let mut code: Vec<Node> = Vec::new();
+        while !self.tokens.is_EOF() {
+            code.push(self.stmt());
+        }
+        return code;
+    }
+
+    pub fn stmt(&mut self) -> Node {
+        let node: Node = self.expr();
+        self.tokens.expect(String::from(";"));
+        return node;
+    }
+
     pub fn expr(&mut self) -> Node {
-        return self.equality();
+        return self.assign();
+    }
+
+    pub fn assign(&mut self) -> Node {
+        let mut node: Node = self.equality();
+        if self.tokens.consume(String::from("=")) {
+            node = new_node(NodeKind::ND_ASSIGN, node, self.assign());
+        }
+        return node;
     }
 
     pub fn equality(&mut self) -> Node {
@@ -88,7 +110,16 @@ impl Parser {
             return node;
         }
 
-        new_node_num(self.tokens.expect_number())
+        let next_token = self.tokens.consume_ident();
+        match next_token {
+            Some(token) => {
+                let offset: i32 = (token.s.chars().nth(0).unwrap() as i32 - 'a' as i32 + 1) * 8;
+                return new_node_ident(offset);
+            },
+            None => {
+                return new_node_num(self.tokens.expect_number());
+            },
+        }
     }
 }
 

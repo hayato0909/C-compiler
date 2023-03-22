@@ -1,5 +1,6 @@
 pub enum TokenKind {
     TK_RESERVED,
+    TK_IDENT,
     TK_NUM,
     TK_EOF,
 }
@@ -7,7 +8,7 @@ pub enum TokenKind {
 pub struct Token {
     kind: TokenKind,
     val: i32,
-    s: String,
+    pub s: String,
 }
 
 pub struct Tokens {
@@ -86,6 +87,15 @@ impl Tokens {
             } else if '0' <= c && c <= '9' {
                 num_flag = true;
                 num = num * 10 + (c as i32 - '0' as i32);
+            } else if 'a' <= c && c <= 'z' {
+                if num_flag {
+                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
+                    self.add_token(num_token);
+                    num = 0;
+                    num_flag = false;
+                }
+                let token = Token{kind:TokenKind::TK_IDENT, val:0, s:c.to_string()};
+                self.add_token(token);
             } else {
                 panic!("予期しない文字です: {}", c);
             }
@@ -106,6 +116,16 @@ impl Tokens {
             self.idx += 1;
             true 
         }
+    }
+
+    // 次のトークンが変数の時には、トークンを返す
+    // それ以外の場合にはNoneを返す
+    pub fn consume_ident(&mut self) -> Option<&Token> {
+        let token: &Token = self.get_token();
+        if matches!(token.kind, TokenKind::TK_IDENT) {
+            return Some(token);
+        }
+        return None;
     }
 
     // 次のトークンが期待している記号以外の場合にエラーを発生
