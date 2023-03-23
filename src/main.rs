@@ -15,24 +15,56 @@ fn main() {
     // トークナイズする
     tokens.tokenize(v);
     let mut parser: parser::Parser = parser::Parser::new(tokens);
-    let node: node::Node = parser.expr();
+    let code: Vec<node::Node> = parser.program();
 
     // アセンブリの前半部分を出力
     println!(".intel_syntax noprefix");
     println!(".globl main");
     println!("main:");
 
-    gen(node);
+    // 変数26個分の領域を確保する
+    println!("  push rbp");
+    println!("  mov rbp, rsp");
+    println!("  sub rsp, 208");
 
-    println!("  pop rax");
+    // 先頭の式から順にコードを生成
+    for node in code {
+        gen(node);
+
+        // 式の評価結果としてスタックに1つ値が残っている
+        // はずなので、スタックが溢れないようにポップしておく
+        println!("  pop rax");
+    }
+
+    println!("  mov rsp, rbp");
+    println!("  pop rbp");
     println!("  ret");
 }
 
 fn gen(node: node::Node) {
-    let kind: node::NodeKind = node.kind;
-    if matches!(kind, node::NodeKind::ND_NUM) {
-        println!("  push {}", node.val.unwrap());
-        return;
+    match node.kind {
+        node::NodeKind::ND_NUM => {
+            println!("  push {}", node.val.unwrap());
+            return;
+        },
+        node::NodeKind::ND_LVAR => {
+            let node = gen_lval(node);
+            println!("  pop rax");
+            println!("  mov rax, [rax]");
+            println!("  push rax");
+            return;
+        },
+        node::NodeKind::ND_ASSIGN => {
+            gen_lval(*node.lhs.unwrap());
+            gen_lval(*node.rhs.unwrap());
+
+            println!("  pop rdi");
+            println!("  pop rax");
+            println!("  mov [rax], rdi");
+            println!("  push rdi");
+            return;
+        },
+        _ => {},
     }
 
     gen(*node.lhs.unwrap());
@@ -41,7 +73,7 @@ fn gen(node: node::Node) {
     println!("  pop rdi");
     println!("  pop rax");
 
-    match kind {
+    match node.kind {
         node::NodeKind::ND_ADD => { println!("  add rax, rdi"); },
         node::NodeKind::ND_SUB => { println!("  sub rax, rdi"); },
         node::NodeKind::ND_MUL => { println!("  imul rax, rdi"); },
@@ -63,6 +95,7 @@ fn gen(node: node::Node) {
             println!("  cmp rax, rdi");
             println!("  setl al");
             println!("  movzb rax, al");
+
         },
         node::NodeKind::ND_LE => {
             println!("  cmp rax, rdi");
@@ -73,4 +106,18 @@ fn gen(node: node::Node) {
     }
 
     println!("  push rax");
+    return;
 }
+
+fn gen_lval(node: node::Node) -> node::Node {
+    if !matches!(node.kind, node::NodeKind::ND_LVAR) {
+        panic!("代入の左辺値が変数ではありません");
+    }
+
+    println!("  mov rax, rbp");
+    println!("  sub rax, {}", node.offset.unwrap());
+    println!("  push rax");
+
+    node
+}
+

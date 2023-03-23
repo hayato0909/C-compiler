@@ -47,7 +47,7 @@ impl Tokens {
             let c = v[i];
             if c == ' ' {
                 continue;
-            } else if c == '+' || c == '-' || c == '*' || c == '/' || c == ')' || c == '(' {
+            } else if c == '+' || c == '-' || c == '*' || c == '/' || c == ')' || c == '(' || c == ';' {
                 if num_flag {
                     let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
                     self.add_token(num_token);
@@ -100,8 +100,10 @@ impl Tokens {
                 panic!("予期しない文字です: {}", c);
             }
         }
-        let token: Token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
-        self.add_token(token);
+        if num_flag {
+            let token: Token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
+            self.add_token(token);
+        }
         // 終端トークンを追加
         self.add_token(Token{kind:TokenKind::TK_EOF, val:0, s:String::from("")});
     }
@@ -122,17 +124,19 @@ impl Tokens {
     // それ以外の場合にはNoneを返す
     pub fn consume_ident(&mut self) -> Option<&Token> {
         let token: &Token = self.get_token();
-        if matches!(token.kind, TokenKind::TK_IDENT) {
+        if !matches!(token.kind, TokenKind::TK_IDENT) {
+            return None;
+        } else {
+            self.idx += 1;
             return Some(token);
         }
-        return None;
     }
 
     // 次のトークンが期待している記号以外の場合にエラーを発生
     pub fn expect(&mut self, op: String) {
         let token: &Token = self.get_token();
         if !matches!(token.kind, TokenKind::TK_RESERVED) || token.s != op { panic!("'{}'ではありません", op); }
-        self.idx += 1
+        self.idx += 1;
     }
 
     // 次のトークンが数値の場合
