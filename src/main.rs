@@ -48,7 +48,7 @@ fn gen(node: node::Node) {
             return;
         },
         node::NodeKind::ND_LVAR => {
-            let node = gen_lval(node);
+            gen_lval(node);
             println!("  pop rax");
             println!("  mov rax, [rax]");
             println!("  push rax");
@@ -56,7 +56,7 @@ fn gen(node: node::Node) {
         },
         node::NodeKind::ND_ASSIGN => {
             gen_lval(*node.lhs.unwrap());
-            gen_lval(*node.rhs.unwrap());
+            gen(*node.rhs.unwrap());
 
             println!("  pop rdi");
             println!("  pop rax");

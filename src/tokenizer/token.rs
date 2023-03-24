@@ -120,15 +120,26 @@ impl Tokens {
         }
     }
 
-    // 次のトークンが変数の時には、トークンを返す
-    // それ以外の場合にはNoneを返す
-    pub fn consume_ident(&mut self) -> Option<&Token> {
+    pub fn test_consume(&mut self) -> bool {
         let token: &Token = self.get_token();
+        if !matches!(token.kind, TokenKind::TK_IDENT) {
+            return false;
+        } else {
+            self.idx += 1;
+            return true;
+        }
+    }
+
+    // 次のトークンが変数の時には、変数文字列を返す
+    // それ以外の場合にはNoneを返す
+    pub fn consume_ident(&mut self) -> Option<String> {
+        let token: &Token = self.get_token();
+        let var: String = token.s.clone();
         if !matches!(token.kind, TokenKind::TK_IDENT) {
             return None;
         } else {
             self.idx += 1;
-            return Some(token);
+            return Some(var);
         }
     }
 

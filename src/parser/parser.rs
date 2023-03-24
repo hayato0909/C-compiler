@@ -112,8 +112,8 @@ impl Parser {
 
         let next_token = self.tokens.consume_ident();
         match next_token {
-            Some(token) => {
-                let offset: i32 = (token.s.chars().nth(0).unwrap() as i32 - 'a' as i32 + 1) * 8;
+            Some(var) => {
+                let offset: i32 = (var.chars().nth(0).unwrap() as i32 - 'a' as i32 + 1) * 8;
                 return new_node_ident(offset);
             },
             None => {
