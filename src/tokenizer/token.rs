@@ -3,6 +3,7 @@ pub enum TokenKind {
     TK_IDENT,
     TK_NUM,
     TK_EOF,
+    TK_RETURN,
 }
 
 pub struct Token {
@@ -62,8 +63,13 @@ impl Tokens {
                 var += &c.to_string();
                 continue;
             } else if var_flag {
-                let var_token: Token = Token{kind:TokenKind::TK_IDENT, val:None, s:var.clone()};
-                self.add_token(var_token);
+                let token;
+                // キーワード(return)と一致するか判定
+                match &*var {  // Stringから&strにすることでmatchに対応させる
+                    "return" => { token = Token{kind:TokenKind::TK_RETURN, val:None, s:var.clone()}; },
+                    _ => { token = Token{kind:TokenKind::TK_IDENT, val:None, s:var.clone()}; },
+                }
+                self.add_token(token);
                 var = "".to_string();
                 var_flag = false;
             }
@@ -119,16 +125,6 @@ impl Tokens {
         }
     }
 
-    pub fn test_consume(&mut self) -> bool {
-        let token: &Token = self.get_token();
-        if !matches!(token.kind, TokenKind::TK_IDENT) {
-            return false;
-        } else {
-            self.idx += 1;
-            return true;
-        }
-    }
-
     // 次のトークンが変数の時には、変数文字列を返す
     // それ以外の場合にはNoneを返す
     pub fn consume_ident(&mut self) -> Option<String> {
@@ -140,6 +136,17 @@ impl Tokens {
             self.idx += 1;
             return Some(var);
         }
+    }
+
+    // 次のトークンの種類が期待しているものの場合、トークンを1つ進めてtrueを返す
+    // それ以外の場合にはfalseを返す
+    pub fn consume_return(&mut self) -> bool {
+        let token: &Token = self.get_token();
+        if matches!(&token.kind, TokenKind::TK_RETURN) {
+            self.idx += 1;
+            return true;
+        }
+        false
     }
 
     // 次のトークンが期待している記号以外の場合にエラーを発生

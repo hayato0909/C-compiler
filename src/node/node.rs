@@ -10,6 +10,7 @@ pub enum NodeKind {
     ND_NE, // !=
     ND_LT, // <
     ND_LE, // <=
+    ND_RETURN, // return文
 }
 
 pub struct Node {
@@ -23,6 +24,10 @@ pub struct Node {
 pub fn new_node(kind: NodeKind, lhs: Node, rhs: Node) -> Node {
     let node: Node = Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:Some(Box::new(rhs)), val:None, offset:None};
     node
+}
+
+pub fn new_node_alone(kind: NodeKind, lhs: Node) -> Node {
+    Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:None, val:None, offset:None}
 }
 
 pub fn new_node_num(num: i32) -> Node {

@@ -64,6 +64,15 @@ fn gen(node: node::Node) {
             println!("  push rdi");
             return;
         },
+        node::NodeKind::ND_RETURN => {
+            gen(*node.lhs.unwrap());
+
+            println!("  pop rax");
+            println!("  mov rsp, rbp");
+            println!("  pop rbp");
+            println!("  ret");
+            return;
+        },
         _ => {},
     }
 

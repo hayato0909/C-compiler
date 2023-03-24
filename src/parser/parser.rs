@@ -1,5 +1,5 @@
 use crate::tokenizer::token;
-use crate::node::node::{Node, NodeKind, new_node, new_node_num, new_node_ident};
+use crate::node::node::{Node, NodeKind, new_node, new_node_alone, new_node_num, new_node_ident};
 
 pub struct Parser {
     tokens: token::Tokens,
@@ -20,7 +20,13 @@ impl Parser {
     }
 
     pub fn stmt(&mut self) -> Node {
-        let node: Node = self.expr();
+        let node: Node;
+        if self.tokens.consume_return() {
+            println!("find return !!!!!!!!");
+            node = new_node_alone(NodeKind::ND_RETURN, self.expr());
+        } else {
+            node = self.expr();
+        }
         self.tokens.expect(String::from(";"));
         return node;
     }
