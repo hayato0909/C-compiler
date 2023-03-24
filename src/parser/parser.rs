@@ -3,11 +3,12 @@ use crate::node::node::{Node, NodeKind, new_node, new_node_num, new_node_ident};
 
 pub struct Parser {
     tokens: token::Tokens,
+    locals: Vec<String>, // 変数文字列の一覧
 }
 
 impl Parser {
     pub fn new(tokens: token::Tokens) -> Self {
-        Parser{tokens: tokens}
+        Parser{tokens:tokens, locals:Vec::<String>::new()}
     }
 
     pub fn program(&mut self) -> Vec<Node> {
@@ -113,13 +114,34 @@ impl Parser {
         let next_token = self.tokens.consume_ident();
         match next_token {
             Some(var) => {
-                let offset: i32 = (var.chars().nth(0).unwrap() as i32 - 'a' as i32 + 1) * 8;
+                let offset: i32;
+                match self.find_lvar(&var) {
+                    Some(i) => {
+                        offset = i;
+                    },
+                    None => {
+                        self.locals.push(var);
+                        offset = self.locals.len() as i32 * 8;
+                    }
+                }
                 return new_node_ident(offset);
             },
             None => {
                 return new_node_num(self.tokens.expect_number());
             },
         }
+    }
+
+    // すでに出てきている変数の中に含まれているかを探す
+    // 見つかった場合には、そのオフセットを返す
+    // 見つからなかった場合には、Noneを返す
+    fn find_lvar(&self, var: &String) -> Option<i32> {
+        for (i, var) in self.locals.iter().enumerate() {
+            if matches!(&var, s) {
+                return Some((i as i32+1)*8);
+            }
+        }
+        return None;
     }
 }
 

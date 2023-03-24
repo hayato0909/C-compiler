@@ -6,9 +6,9 @@ pub enum TokenKind {
 }
 
 pub struct Token {
-    kind: TokenKind,
-    val: i32,
-    pub s: String,
+    kind: TokenKind, // トークンの種類
+    val: Option<i32>, // 値
+    pub s: String, // トークン
 }
 
 pub struct Tokens {
@@ -18,7 +18,7 @@ pub struct Tokens {
 
 impl Tokens {
     pub fn new() -> Self {
-        Tokens {tokens : Vec::<Token>::new(), idx : 0,}
+        Tokens {tokens : Vec::<Token>::new(), idx : 0}
     }
 
     fn get_token(&self) -> &Token {
@@ -38,6 +38,8 @@ impl Tokens {
     pub fn tokenize(&mut self, v: Vec<char>) {
         let mut num: i32 = 0;
         let mut num_flag: bool = false;
+        let mut var: String = "".to_string();
+        let mut var_flag: bool = false;
         let mut skip: bool = false;
         for i in 0..v.len() {
             if skip { 
@@ -45,67 +47,64 @@ impl Tokens {
                 continue; 
             }
             let c = v[i];
+
+            if num_flag && '0' <= c && c <= '9' {
+                num = num * 10 + (c as i32 - '0' as i32);
+                continue;
+            } else if num_flag {
+                let num_token = Token{kind:TokenKind::TK_NUM, val:Some(num), s:num.to_string()};
+                self.add_token(num_token);
+                num = 0;
+                num_flag = false;
+            }
+
+            if var_flag && 'a' <= c && c <= 'z' {
+                var += &c.to_string();
+                continue;
+            } else if var_flag {
+                let var_token: Token = Token{kind:TokenKind::TK_IDENT, val:None, s:var.clone()};
+                self.add_token(var_token);
+                var = "".to_string();
+                var_flag = false;
+            }
+
             if c == ' ' {
                 continue;
             } else if c == '+' || c == '-' || c == '*' || c == '/' || c == ')' || c == '(' || c == ';' {
-                if num_flag {
-                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
-                    self.add_token(num_token);
-                    num = 0;
-                    num_flag = false;
-                }
-                let token = Token{kind:TokenKind::TK_RESERVED, val:0, s:c.to_string()};
+                let token = Token{kind:TokenKind::TK_RESERVED, val:None, s:c.to_string()};
                 self.add_token(token);
             } else if c == '<' || c == '>' {
-                if num_flag {
-                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
-                    self.add_token(num_token);
-                    num = 0;
-                    num_flag = false;
-                }
                 let mut s: String = c.to_string();
                 if i + 1 < v.len() && v[i+1] == '=' {
                     s += &v[i+1].to_string();
                     skip = true;
                 }
-                let token = Token{kind:TokenKind::TK_RESERVED, val:0, s:s};
+                let token = Token{kind:TokenKind::TK_RESERVED, val:None, s:s};
                 self.add_token(token);
             } else if c == '=' || c == '!' {
-                if num_flag {
-                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
-                    self.add_token(num_token);
-                    num = 0;
-                    num_flag = false;
-                }
                 let mut s: String = c.to_string();
                 if i + 1 < v.len() && v[i+1] == '=' {
                     s += &v[i+1].to_string();
                     skip = true;
                 }
-                let token = Token{kind:TokenKind::TK_RESERVED, val:0, s:s};
+                let token = Token{kind:TokenKind::TK_RESERVED, val:None, s:s};
                 self.add_token(token);
             } else if '0' <= c && c <= '9' {
                 num_flag = true;
-                num = num * 10 + (c as i32 - '0' as i32);
+                num = c as i32 - '0' as i32;
             } else if 'a' <= c && c <= 'z' {
-                if num_flag {
-                    let num_token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
-                    self.add_token(num_token);
-                    num = 0;
-                    num_flag = false;
-                }
-                let token = Token{kind:TokenKind::TK_IDENT, val:0, s:c.to_string()};
-                self.add_token(token);
+                var_flag = true;
+                var = c.to_string();
             } else {
                 panic!("予期しない文字です: {}", c);
             }
         }
         if num_flag {
-            let token: Token = Token{kind:TokenKind::TK_NUM, val:num, s:num.to_string()};
+            let token: Token = Token{kind:TokenKind::TK_NUM, val:Some(num), s:num.to_string()};
             self.add_token(token);
         }
         // 終端トークンを追加
-        self.add_token(Token{kind:TokenKind::TK_EOF, val:0, s:String::from("")});
+        self.add_token(Token{kind:TokenKind::TK_EOF, val:None, s:String::from("")});
     }
 
     // 次のトークンが期待している記号の時には、トークンを1つ進めてtrueを返す
@@ -154,9 +153,9 @@ impl Tokens {
     pub fn expect_number(&mut self) -> i32 {
         let token: &Token = self.get_token();
         if ! matches!(token.kind, TokenKind::TK_NUM) {
-            panic!("数ではありません: {}", token.val);
+            panic!("数ではありません: {}", token.s);
         }
-        let val: i32 = token.val;
+        let val: i32 = token.val.unwrap();
         self.idx += 1;
         val
     }
