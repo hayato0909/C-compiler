@@ -73,6 +73,57 @@ fn gen(node: node::Node) {
             println!("  ret");
             return;
         },
+        node::NodeKind::ND_IF => {
+            let state_node: node::Node = *node.rhs.unwrap();
+            gen(*node.lhs.unwrap());
+
+            println!("  pop rax");
+            println!("  cmp rax, 0");
+            println!("  je .Lelse");
+            gen(*state_node.lhs.unwrap());
+            println!("  jmp .Lend");
+            println!(".Lelse");
+            if state_node.rhs.is_some() {
+                gen(*state_node.rhs.unwrap());
+            }
+            println!(".Lend");
+            return;
+        },
+        node::NodeKind::ND_WHILE => {
+            println!(".Lbegin");
+            gen(*node.lhs.unwrap());
+            println!("  pop rax");
+            println!("  cmp rax, 0");
+            println!("  je .Lend");
+            gen(*node.rhs.unwrap());
+            println!("  jmp .Lbegin");
+            println!(".Lend");
+            return;
+        },
+        node::NodeKind::ND_FOR1 => {
+            if node.lhs.is_some() {
+                gen(*node.lhs.unwrap());
+            }
+            println!(".Lbegin");
+            let cond_node: node::Node = *node.rhs.unwrap();
+            if cond_node.lhs.is_some() {
+                gen(*cond_node.lhs.unwrap());
+                println!("  pop rax");
+                println!("  cmp rax, 0");
+                println!("  je .Lend");
+            } else {
+                // 条件式がない場合は常にtrue
+                println!("  jmp .Lend");
+            }
+            let inc_node: node::Node = *cond_node.rhs.unwrap();
+            gen(*inc_node.rhs.unwrap());
+            if inc_node.lhs.is_some() {
+                gen(*inc_node.lhs.unwrap());
+            }
+            println!("  jmp .Lbegin");
+            println!(".Lend");
+            return;
+        },
         _ => {},
     }
 

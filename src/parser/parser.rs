@@ -1,5 +1,5 @@
 use crate::tokenizer::token;
-use crate::node::node::{Node, NodeKind, new_node, new_node_alone, new_node_num, new_node_ident};
+use crate::node::node::{Node, NodeKind, new_node, new_node_alone, new_node_alone2, new_node_num, new_node_ident};
 
 pub struct Parser {
     tokens: token::Tokens,
@@ -21,15 +21,83 @@ impl Parser {
 
     pub fn stmt(&mut self) -> Node {
         let node: Node;
-        if self.tokens.consume_return() {
-            println!("find return !!!!!!!!");
-            node = new_node_alone(NodeKind::ND_RETURN, self.expr());
-        } else {
-            node = self.expr();
+        let kind: &token::TokenKind = &self.tokens.get_token().kind;
+        match kind {
+            token::TokenKind::TK_RETURN => {
+                self.tokens.next();
+                node = new_node_alone(NodeKind::ND_RETURN, self.expr());
+                self.tokens.expect(String::from(";"));
+            },
+            token::TokenKind::TK_IF => {
+                self.tokens.next();
+                self.tokens.expect(String::from("("));
+                let cond: Node = self.expr();
+                self.tokens.expect(String::from(")"));
+                node = new_node(NodeKind::ND_IF, cond, self.if_state());
+            },
+            token::TokenKind::TK_WHILE => {
+                self.tokens.next();
+                self.tokens.expect(String::from("("));
+                let cond: Node = self.expr();
+                self.tokens.expect(String::from(")"));
+                node = new_node(NodeKind::ND_WHILE, cond, self.stmt());
+            },
+            token::TokenKind::TK_FOR => {
+                self.tokens.next();
+                self.tokens.expect(String::from("("));
+                if self.tokens.consume(String::from(";")) {
+                    node = new_node_alone2(NodeKind::ND_FOR1, self.for1());
+                } else {
+                    let init: Node = self.expr();
+                    self.tokens.expect(String::from(";"));
+                    node = new_node(NodeKind::ND_FOR1, init, self.for1());
+                }
+            },
+            _ => {
+                node = self.expr();
+                self.tokens.expect(String::from(";"));
+            },
         }
-        self.tokens.expect(String::from(";"));
         return node;
     }
+
+    pub fn if_state(&mut self) -> Node {
+        let node: Node;
+        let then: Node = self.stmt();
+        let kind: &token::TokenKind = &self.tokens.get_token().kind;
+        if matches!(kind, token::TokenKind::TK_ELSE) {
+            self.tokens.next();
+            node = new_node(NodeKind::ND_IFIN, then, self.stmt());
+        } else {
+            node = new_node_alone(NodeKind::ND_IFIN, then);
+        }
+        node
+    }
+
+    pub fn for1(&mut self) -> Node {
+        let node: Node;
+        if self.tokens.consume(String::from(";")) {
+            node = new_node_alone2(NodeKind::ND_FOR2, self.for2());
+        } else {
+            let cond: Node = self.expr();
+            self.tokens.expect(String::from(";"));
+            node = new_node(NodeKind::ND_FOR2, cond, self.for2());
+        }
+        node
+    }
+
+    pub fn for2(&mut self) -> Node {
+        let node: Node;
+        if self.tokens.consume(String::from(")")) {
+            node = new_node_alone2(NodeKind::ND_FOR3, self.stmt());
+        } else {
+            let inc: Node = self.expr();
+            self.tokens.expect(String::from(")"));
+            node = new_node(NodeKind::ND_FOR3, inc, self.stmt());
+        }
+        node
+    }
+
 
     pub fn expr(&mut self) -> Node {
         return self.assign();

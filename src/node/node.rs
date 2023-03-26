@@ -11,6 +11,12 @@ pub enum NodeKind {
     ND_LT, // <
     ND_LE, // <=
     ND_RETURN, // return文
+    ND_IF, // if文 (lhs: if条件, rhs: if実行文ノード)
+    ND_IFIN, // if 実行文内部 (lhs: if実行文ノード, rhs: else実行文ノード)
+    ND_WHILE, // while文 (lhs: while条件, rhs: while実行文ノード)
+    ND_FOR1, // for文 (lhs: 初期化式, rhs: for2 node)
+    ND_FOR2, // for文 (lhs: 条件式, rhs: for3 node) 
+    ND_FOR3, // for文 (lhs: 更新式, rhs: for実行文ノード)
 }
 
 pub struct Node {
@@ -28,6 +34,10 @@ pub fn new_node(kind: NodeKind, lhs: Node, rhs: Node) -> Node {
 
 pub fn new_node_alone(kind: NodeKind, lhs: Node) -> Node {
     Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:None, val:None, offset:None}
+}
+
+pub fn new_node_alone2(kind: NodeKind, rhs: Node) -> Node {
+    Node{kind:kind, lhs:None, rhs:Some(Box::new(rhs)), val:None, offset:None}
 }
 
 pub fn new_node_num(num: i32) -> Node {

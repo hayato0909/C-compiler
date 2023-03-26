@@ -4,10 +4,14 @@ pub enum TokenKind {
     TK_NUM,
     TK_EOF,
     TK_RETURN,
+    TK_IF,
+    TK_ELSE,
+    TK_WHILE,
+    TK_FOR,
 }
 
 pub struct Token {
-    kind: TokenKind, // トークンの種類
+    pub kind: TokenKind, // トークンの種類
     val: Option<i32>, // 値
     pub s: String, // トークン
 }
@@ -22,7 +26,7 @@ impl Tokens {
         Tokens {tokens : Vec::<Token>::new(), idx : 0}
     }
 
-    fn get_token(&self) -> &Token {
+    pub fn get_token(&self) -> &Token {
         &self.tokens[self.idx]
     }
 
@@ -64,9 +68,13 @@ impl Tokens {
                 continue;
             } else if var_flag {
                 let token;
-                // キーワード(return)と一致するか判定
+                // キーワードと一致するか判定
                 match &*var {  // Stringから&strにすることでmatchに対応させる
                     "return" => { token = Token{kind:TokenKind::TK_RETURN, val:None, s:var.clone()}; },
+                    "if" => { token = Token{kind:TokenKind::TK_IF, val:None, s:var.clone()}; },
+                    "else" => { token = Token{kind:TokenKind::TK_ELSE, val:None, s:var.clone()}; },
+                    "while" => { token = Token{kind:TokenKind::TK_WHILE, val:None, s:var.clone()}; },
+                    "for" => { token = Token{kind:TokenKind::TK_FOR, val:None, s:var.clone()}; },
                     _ => { token = Token{kind:TokenKind::TK_IDENT, val:None, s:var.clone()}; },
                 }
                 self.add_token(token);
@@ -125,6 +133,11 @@ impl Tokens {
         }
     }
 
+    // トークンを1つ読み進める
+    pub fn next(&mut self) {
+        self.idx += 1;
+    }
+
     // 次のトークンが変数の時には、変数文字列を返す
     // それ以外の場合にはNoneを返す
     pub fn consume_ident(&mut self) -> Option<String> {
@@ -136,17 +149,6 @@ impl Tokens {
             self.idx += 1;
             return Some(var);
         }
-    }
-
-    // 次のトークンの種類が期待しているものの場合、トークンを1つ進めてtrueを返す
-    // それ以外の場合にはfalseを返す
-    pub fn consume_return(&mut self) -> bool {
-        let token: &Token = self.get_token();
-        if matches!(&token.kind, TokenKind::TK_RETURN) {
-            self.idx += 1;
-            return true;
-        }
-        false
     }
 
     // 次のトークンが期待している記号以外の場合にエラーを発生
