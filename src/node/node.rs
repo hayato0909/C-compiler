@@ -27,17 +27,17 @@ pub struct Node {
     pub offset: Option<i32>,
 }
 
-pub fn new_node(kind: NodeKind, lhs: Node, rhs: Node) -> Node {
-    let node: Node = Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:Some(Box::new(rhs)), val:None, offset:None};
+pub fn new_node(kind: NodeKind, lhs: Node, rhs: Node, cnt: Option<i32>) -> Node {
+    let node: Node = Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:Some(Box::new(rhs)), val:cnt, offset:None};
     node
 }
 
-pub fn new_node_alone(kind: NodeKind, lhs: Node) -> Node {
-    Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:None, val:None, offset:None}
+pub fn new_node_alone(kind: NodeKind, lhs: Node, cnt: Option<i32>) -> Node {
+    Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:None, val:cnt, offset:None}
 }
 
-pub fn new_node_alone2(kind: NodeKind, rhs: Node) -> Node {
-    Node{kind:kind, lhs:None, rhs:Some(Box::new(rhs)), val:None, offset:None}
+pub fn new_node_alone2(kind: NodeKind, rhs: Node, cnt: Option<i32>) -> Node {
+    Node{kind:kind, lhs:None, rhs:Some(Box::new(rhs)), val:cnt, offset:None}
 }
 
 pub fn new_node_num(num: i32) -> Node {

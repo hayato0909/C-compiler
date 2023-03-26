@@ -4,11 +4,14 @@ use crate::node::node::{Node, NodeKind, new_node, new_node_alone, new_node_alone
 pub struct Parser {
     tokens: token::Tokens,
     locals: Vec<String>, // 変数文字列の一覧
+    if_cnt: i32, // if文の数
+    while_cnt: i32, // while文の数
+    for_cnt: i32, // for文の数
 }
 
 impl Parser {
     pub fn new(tokens: token::Tokens) -> Self {
-        Parser{tokens:tokens, locals:Vec::<String>::new()}
+        Parser{tokens:tokens, locals:Vec::<String>::new(), if_cnt:0, while_cnt:0, for_cnt:0}
     }
 
     pub fn program(&mut self) -> Vec<Node> {
@@ -25,7 +28,7 @@ impl Parser {
         match kind {
             token::TokenKind::TK_RETURN => {
                 self.tokens.next();
-                node = new_node_alone(NodeKind::ND_RETURN, self.expr());
+                node = new_node_alone(NodeKind::ND_RETURN, self.expr(), None::<i32>);
                 self.tokens.expect(String::from(";"));
             },
             token::TokenKind::TK_IF => {
@@ -33,25 +36,28 @@ impl Parser {
                 self.tokens.expect(String::from("("));
                 let cond: Node = self.expr();
                 self.tokens.expect(String::from(")"));
-                node = new_node(NodeKind::ND_IF, cond, self.if_state());
+                node = new_node(NodeKind::ND_IF, cond, self.if_state(), Some(self.if_cnt));
+                self.if_cnt += 1;
             },
             token::TokenKind::TK_WHILE => {
                 self.tokens.next();
                 self.tokens.expect(String::from("("));
                 let cond: Node = self.expr();
                 self.tokens.expect(String::from(")"));
-                node = new_node(NodeKind::ND_WHILE, cond, self.stmt());
+                node = new_node(NodeKind::ND_WHILE, cond, self.stmt(), Some(self.while_cnt));
+                self.while_cnt += 1;
             },
             token::TokenKind::TK_FOR => {
                 self.tokens.next();
                 self.tokens.expect(String::from("("));
                 if self.tokens.consume(String::from(";")) {
-                    node = new_node_alone2(NodeKind::ND_FOR1, self.for1());
+                    node = new_node_alone2(NodeKind::ND_FOR1, self.for1(), Some(self.for_cnt));
                 } else {
                     let init: Node = self.expr();
                     self.tokens.expect(String::from(";"));
-                    node = new_node(NodeKind::ND_FOR1, init, self.for1());
+                    node = new_node(NodeKind::ND_FOR1, init, self.for1(), Some(self.for_cnt));
                 }
+                self.for_cnt += 1;
             },
             _ => {
                 node = self.expr();
@@ -67,9 +73,9 @@ impl Parser {
         let kind: &token::TokenKind = &self.tokens.get_token().kind;
         if matches!(kind, token::TokenKind::TK_ELSE) {
             self.tokens.next();
-            node = new_node(NodeKind::ND_IFIN, then, self.stmt());
+            node = new_node(NodeKind::ND_IFIN, then, self.stmt(), None::<i32>);
         } else {
-            node = new_node_alone(NodeKind::ND_IFIN, then);
+            node = new_node_alone(NodeKind::ND_IFIN, then, None::<i32>);
         }
         node
     }
@@ -77,11 +83,11 @@ impl Parser {
     pub fn for1(&mut self) -> Node {
         let node: Node;
         if self.tokens.consume(String::from(";")) {
-            node = new_node_alone2(NodeKind::ND_FOR2, self.for2());
+            node = new_node_alone2(NodeKind::ND_FOR2, self.for2(), None::<i32>);
         } else {
             let cond: Node = self.expr();
             self.tokens.expect(String::from(";"));
-            node = new_node(NodeKind::ND_FOR2, cond, self.for2());
+            node = new_node(NodeKind::ND_FOR2, cond, self.for2(), None::<i32>);
         }
         node
     }
@@ -89,11 +95,11 @@ impl Parser {
     pub fn for2(&mut self) -> Node {
         let node: Node;
         if self.tokens.consume(String::from(")")) {
-            node = new_node_alone2(NodeKind::ND_FOR3, self.stmt());
+            node = new_node_alone2(NodeKind::ND_FOR3, self.stmt(), None::<i32>);
         } else {
             let inc: Node = self.expr();
             self.tokens.expect(String::from(")"));
-            node = new_node(NodeKind::ND_FOR3, inc, self.stmt());
+            node = new_node(NodeKind::ND_FOR3, inc, self.stmt(), None::<i32>);
         }
         node
     }
@@ -106,7 +112,7 @@ impl Parser {
     pub fn assign(&mut self) -> Node {
         let mut node: Node = self.equality();
         if self.tokens.consume(String::from("=")) {
-            node = new_node(NodeKind::ND_ASSIGN, node, self.assign());
+            node = new_node(NodeKind::ND_ASSIGN, node, self.assign(), None::<i32>);
         }
         return node;
     }
@@ -115,9 +121,9 @@ impl Parser {
         let mut node: Node = self.relational();
 
         if self.tokens.consume(String::from("==")) {
-            node = new_node(NodeKind::ND_NQ, node, self.relational());
+            node = new_node(NodeKind::ND_NQ, node, self.relational(), None::<i32>);
         } else if self.tokens.consume(String::from("!=")) {
-            node = new_node(NodeKind::ND_NE, node, self.relational());
+            node = new_node(NodeKind::ND_NE, node, self.relational(), None::<i32>);
         }
 
         return node;
@@ -127,13 +133,13 @@ impl Parser {
         let mut node: Node = self.add();
 
         if self.tokens.consume(String::from("<")) {
-            node = new_node(NodeKind::ND_LT, node, self.add());
+            node = new_node(NodeKind::ND_LT, node, self.add(), None::<i32>);
         } else if self.tokens.consume(String::from(">")) {
-            node = new_node(NodeKind::ND_LT, self.add(), node);
+            node = new_node(NodeKind::ND_LT, self.add(), node, None::<i32>);
         } else if self.tokens.consume(String::from("<=")) {
-            node = new_node(NodeKind::ND_LE, node, self.add());
+            node = new_node(NodeKind::ND_LE, node, self.add(), None::<i32>);
         } else if self.tokens.consume(String::from(">=")) {
-            node = new_node(NodeKind::ND_LE, self.add(), node);
+            node = new_node(NodeKind::ND_LE, self.add(), node, None::<i32>);
         }
 
         return node;
@@ -144,9 +150,9 @@ impl Parser {
 
         loop {
             if self.tokens.consume(String::from("+")) {
-                node = new_node(NodeKind::ND_ADD, node, self.mul());
+                node = new_node(NodeKind::ND_ADD, node, self.mul(), None::<i32>);
             } else if self.tokens.consume(String::from("-")) {
-                node = new_node(NodeKind::ND_SUB, node, self.mul());
+                node = new_node(NodeKind::ND_SUB, node, self.mul(), None::<i32>);
             } else {
                 return node;
             }
@@ -158,9 +164,9 @@ impl Parser {
 
         loop {
             if self.tokens.consume(String::from("*")) {
-                node = new_node(NodeKind::ND_MUL, node, self.unary());
+                node = new_node(NodeKind::ND_MUL, node, self.unary(), None::<i32>);
             } else if self.tokens.consume(String::from("/")) {
-                node = new_node(NodeKind::ND_DIV, node, self.unary());
+                node = new_node(NodeKind::ND_DIV, node, self.unary(), None::<i32>);
             } else {
                 return node;
             }
@@ -171,7 +177,7 @@ impl Parser {
         if self.tokens.consume(String::from("+")) {
             return self.primary();
         } else if self.tokens.consume(String::from("-")) {
-            let node = new_node(NodeKind::ND_SUB, new_node_num(0), self.primary());
+            let node = new_node(NodeKind::ND_SUB, new_node_num(0), self.primary(), None::<i32>);
             return node;
         } else {
             return self.primary();

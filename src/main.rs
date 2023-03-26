@@ -75,53 +75,56 @@ fn gen(node: node::Node) {
         },
         node::NodeKind::ND_IF => {
             let state_node: node::Node = *node.rhs.unwrap();
+            let cnt: i32 = node.val.unwrap();
             gen(*node.lhs.unwrap());
 
             println!("  pop rax");
             println!("  cmp rax, 0");
-            println!("  je .Lelse");
+            println!("  je .Ielse{}", cnt);
             gen(*state_node.lhs.unwrap());
-            println!("  jmp .Lend");
-            println!(".Lelse");
+            println!("  jmp .Iend{}", cnt);
+            println!(".Ielse{}", cnt);
             if state_node.rhs.is_some() {
                 gen(*state_node.rhs.unwrap());
             }
-            println!(".Lend");
+            println!(".Iend{}", cnt);
             return;
         },
         node::NodeKind::ND_WHILE => {
-            println!(".Lbegin");
+            let cnt: i32 = node.val.unwrap();
+            println!(".Wbegin{}", cnt);
             gen(*node.lhs.unwrap());
             println!("  pop rax");
             println!("  cmp rax, 0");
-            println!("  je .Lend");
+            println!("  je .Wend{}", cnt);
             gen(*node.rhs.unwrap());
-            println!("  jmp .Lbegin");
-            println!(".Lend");
+            println!("  jmp .Wbegin{}", cnt);
+            println!(".Wend{}", cnt);
             return;
         },
         node::NodeKind::ND_FOR1 => {
+            let cnt: i32 = node.val.unwrap();
             if node.lhs.is_some() {
                 gen(*node.lhs.unwrap());
             }
-            println!(".Lbegin");
+            println!(".Fbegin{}", cnt);
             let cond_node: node::Node = *node.rhs.unwrap();
             if cond_node.lhs.is_some() {
                 gen(*cond_node.lhs.unwrap());
                 println!("  pop rax");
                 println!("  cmp rax, 0");
-                println!("  je .Lend");
+                println!("  je .Fend{}", cnt);
             } else {
                 // 条件式がない場合は常にtrue
-                println!("  jmp .Lend");
+                println!("  jmp .Fend{}", cnt);
             }
             let inc_node: node::Node = *cond_node.rhs.unwrap();
             gen(*inc_node.rhs.unwrap());
             if inc_node.lhs.is_some() {
                 gen(*inc_node.lhs.unwrap());
             }
-            println!("  jmp .Lbegin");
-            println!(".Lend");
+            println!("  jmp .FORbegin{}", cnt);
+            println!(".FORend{}", cnt);
             return;
         },
         _ => {},
