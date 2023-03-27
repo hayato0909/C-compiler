@@ -127,6 +127,20 @@ fn gen(node: node::Node) {
             println!(".Fend{}", cnt);
             return;
         },
+        node::NodeKind::ND_BLOCK => {
+            let mut node: node::Node = node;
+            loop {
+                match node.lhs {
+                    Some(stmt_node) => {
+                        gen(*stmt_node);
+                        node = *node.rhs.unwrap();
+                        println!("  pop rax");
+                    },
+                    None => { break; },
+                }
+            }
+            return;
+        },
         _ => {},
     }
 
@@ -183,4 +197,3 @@ fn gen_lval(node: node::Node) -> node::Node {
 
     node
 }
-

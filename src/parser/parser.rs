@@ -1,5 +1,5 @@
 use crate::tokenizer::token;
-use crate::node::node::{Node, NodeKind, new_node, new_node_alone, new_node_alone2, new_node_num, new_node_ident};
+use crate::node::node::{Node, NodeKind, new_node, new_node_alone, new_node_alone2, new_node_nothing, new_node_num, new_node_ident};
 
 pub struct Parser {
     tokens: token::Tokens,
@@ -23,7 +23,7 @@ impl Parser {
     }
 
     pub fn stmt(&mut self) -> Node {
-        let node: Node;
+        let mut node: Node;
         let kind: &token::TokenKind = &self.tokens.get_token().kind;
         match kind {
             token::TokenKind::TK_RETURN => {
@@ -60,8 +60,23 @@ impl Parser {
                 self.for_cnt += 1;
             },
             _ => {
-                node = self.expr();
-                self.tokens.expect(String::from(";"));
+                if self.tokens.consume(String::from("{")) {
+                    let mut blocks: Vec<Node> = Vec::new();
+                    while !self.tokens.consume(String::from("}")) {
+                        blocks.push(self.stmt());
+                    }
+
+                    // 最後のノードを作成
+                    node = new_node_nothing(NodeKind::ND_BLOCK, None::<i32>);           
+                    // 逆順にノードを作成
+                    blocks.reverse();
+                    for block in blocks {
+                        node = new_node(NodeKind::ND_BLOCK, block, node, None::<i32>);
+                    }
+                } else {
+                    node = self.expr();
+                    self.tokens.expect(String::from(";"));
+                }
             },
         }
         return node;

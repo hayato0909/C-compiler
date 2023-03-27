@@ -84,7 +84,7 @@ impl Tokens {
 
             if c == ' ' {
                 continue;
-            } else if c == '+' || c == '-' || c == '*' || c == '/' || c == ')' || c == '(' || c == ';' {
+            } else if c == '+' || c == '-' || c == '*' || c == '/' || c == ')' || c == '(' || c == ';' || c == '{' || c == '}' {
                 let token = Token{kind:TokenKind::TK_RESERVED, val:None, s:c.to_string()};
                 self.add_token(token);
             } else if c == '<' || c == '>' {
