@@ -16,7 +16,7 @@ impl Parser {
 
     pub fn program(&mut self) -> Vec<Node> {
         let mut code: Vec<Node> = Vec::new();
-        while !self.tokens.is_EOF() {
+        while !self.tokens.is_eof() {
             code.push(self.stmt());
         }
         return code;
@@ -231,8 +231,8 @@ impl Parser {
     // 見つかった場合には、そのオフセットを返す
     // 見つからなかった場合には、Noneを返す
     fn find_lvar(&self, var: &String) -> Option<i32> {
-        for (i, var) in self.locals.iter().enumerate() {
-            if matches!(&var, s) {
+        for (i, s) in self.locals.iter().enumerate() {
+            if var == s {
                 return Some((i as i32+1)*8);
             }
         }

@@ -1,3 +1,4 @@
+#[allow(non_camel_case_types)]
 pub enum TokenKind {
     TK_RESERVED,
     TK_IDENT,
@@ -30,7 +31,7 @@ impl Tokens {
         &self.tokens[self.idx]
     }
 
-    pub fn is_EOF(&self) -> bool {
+    pub fn is_eof(&self) -> bool {
         let token: &Token = self.get_token();
         if matches!(token.kind, TokenKind::TK_EOF) { true }
         else { false }
