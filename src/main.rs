@@ -123,8 +123,8 @@ fn gen(node: node::Node) {
             if inc_node.lhs.is_some() {
                 gen(*inc_node.lhs.unwrap());
             }
-            println!("  jmp .FORbegin{}", cnt);
-            println!(".FORend{}", cnt);
+            println!("  jmp .Fbegin{}", cnt);
+            println!(".Fend{}", cnt);
             return;
         },
         _ => {},
