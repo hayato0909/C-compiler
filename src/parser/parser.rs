@@ -217,7 +217,7 @@ impl Parser {
     }
 
     // primary = num
-    //      | ident ("(" ")")?
+    //      | ident ("(" expr* ")")?
     //      | "(" expr ")"
     pub fn primary(&mut self) -> Node {
         if self.tokens.consume(String::from("(")) {
@@ -231,8 +231,25 @@ impl Parser {
             Some(var) => {
                 if self.tokens.consume(String::from("(")) {
                     // ident "(" ")"
-                    self.tokens.expect(String::from(")"));
-                    return new_node_nothing(NodeKind::ND_CALL, None::<i32>, Some(var));
+                    
+                    let mut args: Vec<Node> = Vec::new();
+                    while !self.tokens.consume(String::from(")")) {
+                        let arg: Node = self.expr();
+                        args.push(arg);
+                        if !self.tokens.consume(String::from(")")) {
+                            self.tokens.expect(String::from(","));
+                        } else {
+                            break;
+                        }
+                    }
+                    args.reverse();
+                    // 最後のノードを作成
+                    let mut node = new_node_nothing(NodeKind::ND_CALL, None::<i32>, None);
+                    // 引数を追加していく
+                    for arg in args {
+                        node = new_node(NodeKind::ND_CALL, arg, node, None::<i32>, None::<String>);
+                    }
+                    return new_node_alone(NodeKind::ND_CALL, node, None::<i32>, Some(var));
                 } else {
                     // ident
                     let offset: i32;

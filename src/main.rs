@@ -142,6 +142,14 @@ fn gen(node: node::Node) {
             return;
         },
         node::NodeKind::ND_CALL => {
+            let regs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
+            let mut arg_node: node::Node = *node.lhs.unwrap();
+            for reg in regs {
+                if arg_node.lhs.is_none() { break; }
+                gen(*arg_node.lhs.unwrap());
+                println!("  pop {}", reg);
+                arg_node = *arg_node.rhs.unwrap();
+            }
             println!("  call {}", node.name.unwrap());
             return;
         },
