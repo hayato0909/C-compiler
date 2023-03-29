@@ -19,6 +19,7 @@ pub enum NodeKind {
     ND_FOR2, // for文 (lhs: 条件式, rhs: for3 node) 
     ND_FOR3, // for文 (lhs: 更新式, rhs: for実行文ノード)
     ND_BLOCK, // ブロック (lhs: ブロック内部のノード, rhs: 次のノード)
+    ND_CALL, // 関数呼び出し (lhs: 関数名)
 }
 
 pub struct Node {
@@ -27,32 +28,33 @@ pub struct Node {
     pub rhs: Option<Box<Node>>,
     pub val: Option<i32>,
     pub offset: Option<i32>,
+    pub name: Option<String>,
 }
 
-pub fn new_node(kind: NodeKind, lhs: Node, rhs: Node, cnt: Option<i32>) -> Node {
-    let node: Node = Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:Some(Box::new(rhs)), val:cnt, offset:None};
+pub fn new_node(kind: NodeKind, lhs: Node, rhs: Node, cnt: Option<i32>, s: Option<String>) -> Node {
+    let node: Node = Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:Some(Box::new(rhs)), val:cnt, offset:None, name:s};
     node
 }
 
-pub fn new_node_alone(kind: NodeKind, lhs: Node, cnt: Option<i32>) -> Node {
-    Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:None, val:cnt, offset:None}
+pub fn new_node_alone(kind: NodeKind, lhs: Node, cnt: Option<i32>, s:Option<String>) -> Node {
+    Node{kind:kind, lhs:Some(Box::new(lhs)), rhs:None, val:cnt, offset:None, name:s}
 }
 
-pub fn new_node_alone2(kind: NodeKind, rhs: Node, cnt: Option<i32>) -> Node {
-    Node{kind:kind, lhs:None, rhs:Some(Box::new(rhs)), val:cnt, offset:None}
+pub fn new_node_alone2(kind: NodeKind, rhs: Node, cnt: Option<i32>, s:Option<String>) -> Node {
+    Node{kind:kind, lhs:None, rhs:Some(Box::new(rhs)), val:cnt, offset:None, name:s}
 }
 
-pub fn new_node_nothing(kind: NodeKind, cnt: Option<i32>) -> Node {
-    Node{kind:kind, lhs:None, rhs:None, val:cnt, offset:None}
+pub fn new_node_nothing(kind: NodeKind, cnt: Option<i32>, s: Option<String>) -> Node {
+    Node{kind:kind, lhs:None, rhs:None, val:cnt, offset:None, name:s}
 }
 
 pub fn new_node_num(num: i32) -> Node {
-    let node: Node = Node{kind:NodeKind::ND_NUM, lhs:None, rhs:None, val:Some(num), offset:None};
+    let node: Node = Node{kind:NodeKind::ND_NUM, lhs:None, rhs:None, val:Some(num), offset:None, name:None};
     node
 }
 
 pub fn new_node_ident(offset: i32) -> Node {
-    let node: Node = Node{kind:NodeKind::ND_LVAR, lhs:None, rhs:None, val:None, offset:Some(offset)};
+    let node: Node = Node{kind:NodeKind::ND_LVAR, lhs:None, rhs:None, val:None, offset:Some(offset), name:None};
     node
 }
 

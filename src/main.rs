@@ -141,6 +141,10 @@ fn gen(node: node::Node) {
             }
             return;
         },
+        node::NodeKind::ND_CALL => {
+            println!("  call {}", node.name.unwrap());
+            return;
+        },
         _ => {},
     }
 
