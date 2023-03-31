@@ -62,29 +62,28 @@ fn gen(node: node::Node) {
             let state_node: node::Node = *node.rhs.unwrap();
             let cnt: i32 = node.val.unwrap();
             gen(*node.lhs.unwrap());
-
             println!("  pop rax");
             println!("  cmp rax, 0");
-            println!("  je .Ielse{}", cnt);
+            println!("  je .Lelse{}", cnt);
             gen(*state_node.lhs.unwrap());
-            println!("  jmp .Iend{}", cnt);
-            println!(".Ielse{}", cnt);
+            println!("  jmp .Lend{}", cnt);
+            println!(".Lelse{}:", cnt);
             if state_node.rhs.is_some() {
                 gen(*state_node.rhs.unwrap());
             }
-            println!(".Iend{}", cnt);
+            println!(".Lend{}:", cnt);
             return;
         },
         node::NodeKind::ND_WHILE => {
             let cnt: i32 = node.val.unwrap();
-            println!(".Wbegin{}", cnt);
+            println!(".Lbegin{}:", cnt);
             gen(*node.lhs.unwrap());
             println!("  pop rax");
             println!("  cmp rax, 0");
-            println!("  je .Wend{}", cnt);
+            println!("  je .Lend{}", cnt);
             gen(*node.rhs.unwrap());
-            println!("  jmp .Wbegin{}", cnt);
-            println!(".Wend{}", cnt);
+            println!("  jmp .Lbegin{}", cnt);
+            println!(".Lend{}:", cnt);
             return;
         },
         node::NodeKind::ND_FOR1 => {
@@ -92,24 +91,24 @@ fn gen(node: node::Node) {
             if node.lhs.is_some() {
                 gen(*node.lhs.unwrap());
             }
-            println!(".Fbegin{}", cnt);
+            println!(".Lbegin{}:", cnt);
             let cond_node: node::Node = *node.rhs.unwrap();
             if cond_node.lhs.is_some() {
                 gen(*cond_node.lhs.unwrap());
                 println!("  pop rax");
                 println!("  cmp rax, 0");
-                println!("  je .Fend{}", cnt);
+                println!("  je .Lend{}", cnt);
             } else {
                 // 条件式がない場合は常にtrue
-                println!("  jmp .Fend{}", cnt);
+                println!("  jmp .Lend{}", cnt);
             }
             let inc_node: node::Node = *cond_node.rhs.unwrap();
             gen(*inc_node.rhs.unwrap());
             if inc_node.lhs.is_some() {
                 gen(*inc_node.lhs.unwrap());
             }
-            println!("  jmp .Fbegin{}", cnt);
-            println!(".Fend{}", cnt);
+            println!("  jmp .Lbegin{}", cnt);
+            println!(".Lend{}:", cnt);
             return;
         },
         node::NodeKind::ND_BLOCK => {

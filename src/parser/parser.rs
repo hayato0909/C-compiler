@@ -4,14 +4,12 @@ use crate::node::node::{Node, NodeKind, new_node, new_node_alone, new_node_alone
 pub struct Parser {
     tokens: token::Tokens,
     locals: Vec<String>, // 変数文字列の一覧
-    if_cnt: i32, // if文の数
-    while_cnt: i32, // while文の数
-    for_cnt: i32, // for文の数
+    cnt: i32, // if, while, for文の数
 }
 
 impl Parser {
     pub fn new(tokens: token::Tokens) -> Self {
-        Parser{tokens:tokens, locals:Vec::<String>::new(), if_cnt:0, while_cnt:0, for_cnt:0}
+        Parser{tokens:tokens, locals:Vec::<String>::new(), cnt:0}
     }
 
     // program = function*
@@ -87,28 +85,28 @@ impl Parser {
                 self.tokens.expect(String::from("("));
                 let cond: Node = self.expr();
                 self.tokens.expect(String::from(")"));
-                node = new_node(NodeKind::ND_IF, cond, self.if_state(), Some(self.if_cnt), None::<String>);
-                self.if_cnt += 1;
+                node = new_node(NodeKind::ND_IF, cond, self.if_state(), Some(self.cnt), None::<String>);
+                self.cnt += 1;
             },
             token::TokenKind::TK_WHILE => {
                 self.tokens.next();
                 self.tokens.expect(String::from("("));
                 let cond: Node = self.expr();
                 self.tokens.expect(String::from(")"));
-                node = new_node(NodeKind::ND_WHILE, cond, self.stmt(), Some(self.while_cnt), None::<String>);
-                self.while_cnt += 1;
+                node = new_node(NodeKind::ND_WHILE, cond, self.stmt(), Some(self.cnt), None::<String>);
+                self.cnt += 1;
             },
             token::TokenKind::TK_FOR => {
                 self.tokens.next();
                 self.tokens.expect(String::from("("));
                 if self.tokens.consume(String::from(";")) {
-                    node = new_node_alone2(NodeKind::ND_FOR1, self.for1(), Some(self.for_cnt), None::<String>);
+                    node = new_node_alone2(NodeKind::ND_FOR1, self.for1(), Some(self.cnt), None::<String>);
                 } else {
                     let init: Node = self.expr();
                     self.tokens.expect(String::from(";"));
-                    node = new_node(NodeKind::ND_FOR1, init, self.for1(), Some(self.for_cnt), None::<String>);
+                    node = new_node(NodeKind::ND_FOR1, init, self.for1(), Some(self.cnt), None::<String>);
                 }
-                self.for_cnt += 1;
+                self.cnt += 1;
             },
             _ => {
                 if self.tokens.consume(String::from("{")) {
