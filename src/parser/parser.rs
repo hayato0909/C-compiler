@@ -14,13 +14,57 @@ impl Parser {
         Parser{tokens:tokens, locals:Vec::<String>::new(), if_cnt:0, while_cnt:0, for_cnt:0}
     }
 
-    // program = stmt*
+    // program = function*
     pub fn program(&mut self) -> Vec<Node> {
-        let mut code: Vec<Node> = Vec::new();
+        let mut funcs: Vec<Node> = Vec::new();
         while !self.tokens.is_eof() {
-            code.push(self.stmt());
+            // 関数ごとに変数テーブルを初期化する
+            self.locals = Vec::<String>::new();
+            funcs.push(self.function());
         }
-        return code;
+        funcs
+    }
+    
+    // func = ident "(" ident* ")" block
+    #[allow(unused_variables)]
+    pub fn function(&mut self) -> Node {
+        let name: String = { match self.tokens.consume_ident() {
+            Some(s) => s, 
+            None => panic!("関数名がありません"),
+        }};
+        self.tokens.expect(String::from("("));
+        let args: Vec<Node> = Vec::new();
+        while !self.tokens.consume(String::from(")")) {
+            // 変数文字列の一覧に追加していく
+            let arg: String = { match self.tokens.consume_ident() {
+                Some(s) => s, 
+                None => panic!("引数がありません"),
+            }};
+            self.locals.push(arg);
+            if !self.tokens.consume(String::from(")")) {
+                self.tokens.expect(String::from(","));
+            } else {
+                break;
+            }
+        }
+        new_node_alone(NodeKind::ND_FUNC, self.block(), None, Some(name))
+    }
+
+    // block = "{" stmt* "}"
+    // lhs: stmt, rhs: following stmfs node
+    // final node: both lhs and rhs are None
+    pub fn block(&mut self) -> Node {
+        let mut codes: Vec<Node> = Vec::new();
+        self.tokens.expect(String::from("{"));
+        while !self.tokens.consume(String::from("}")) {
+            codes.push(self.stmt());
+        }
+        codes.reverse();
+        let mut node: Node = new_node_nothing(NodeKind::ND_BLOCK, None::<i32>, None::<String>);
+        for code in codes {
+            node = new_node(NodeKind::ND_BLOCK, code, node, None::<i32>, None::<String>);
+        }
+        return node;
     }
 
     // stmt = expr ";"
@@ -28,7 +72,7 @@ impl Parser {
     //     | "while" "(" expr ")" stmt
     //     | "for" "(" expr? ";" for1
     //     | "{" stmt* "}"
-    //     |  expr ";"
+    //      |  expr ";"
     pub fn stmt(&mut self) -> Node {
         let mut node: Node;
         let kind: &token::TokenKind = &self.tokens.get_token().kind;
@@ -230,8 +274,7 @@ impl Parser {
         match next_token {
             Some(var) => {
                 if self.tokens.consume(String::from("(")) {
-                    // ident "(" ")"
-                    
+                    // ident "(" ")"             
                     let mut args: Vec<Node> = Vec::new();
                     while !self.tokens.consume(String::from(")")) {
                         let arg: Node = self.expr();

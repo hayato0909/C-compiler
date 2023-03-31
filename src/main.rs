@@ -19,26 +19,11 @@ fn main() {
 
     // アセンブリの前半部分を出力
     println!(".intel_syntax noprefix");
-    println!(".globl main");
-    println!("main:");
-
-    // 変数26個分の領域を確保する
-    println!("  push rbp");
-    println!("  mov rbp, rsp");
-    println!("  sub rsp, 208");
 
     // 先頭の式から順にコードを生成
     for node in code {
         gen(node);
-
-        // 式の評価結果としてスタックに1つ値が残っている
-        // はずなので、スタックが溢れないようにポップしておく
-        println!("  pop rax");
     }
-
-    println!("  mov rsp, rbp");
-    println!("  pop rbp");
-    println!("  ret");
 }
 
 fn gen(node: node::Node) {
@@ -151,6 +136,22 @@ fn gen(node: node::Node) {
                 arg_node = *arg_node.rhs.unwrap();
             }
             println!("  call {}", node.name.unwrap());
+            return;
+        },
+        node::NodeKind::ND_FUNC => {
+            println!(".globl {}", node.name.clone().unwrap());
+            println!("{}:", node.name.unwrap());
+            println!("  push rbp");
+            println!("  mov rbp, rsp");
+            println!("  sub rsp, 208");
+
+            gen(*node.lhs.unwrap());
+
+
+            println!("  mov rsp, rbp");
+            println!("  pop rbp");
+            println!("  ret");
+            println!("");
             return;
         },
         _ => {},
