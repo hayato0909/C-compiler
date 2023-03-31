@@ -67,7 +67,7 @@ impl Parser {
 
     // stmt = expr ";"
     //     | "if" "(" expr ")" if_state
-    //     | "while" "(" expr ")" stmt
+    //     | "while" "(" expr ")" (stmt | block) 
     //     | "for" "(" expr? ";" for1
     //     | "{" stmt* "}"
     //      |  expr ";"
@@ -93,7 +93,12 @@ impl Parser {
                 self.tokens.expect(String::from("("));
                 let cond: Node = self.expr();
                 self.tokens.expect(String::from(")"));
-                node = new_node(NodeKind::ND_WHILE, cond, self.stmt(), Some(self.cnt), None::<String>);
+                let exec_node: Node = { if self.tokens.check(String::from("{")) {
+                    self.block()
+                } else {
+                    self.stmt()
+                }};
+                node = new_node(NodeKind::ND_WHILE, cond, exec_node, Some(self.cnt), None::<String>);
                 self.cnt += 1;
             },
             token::TokenKind::TK_FOR => {
@@ -131,14 +136,25 @@ impl Parser {
         return node;
     }
 
-    // if_state = stmt ("else" stmt)?
+    // if_state = (stmt | block) ("else" (stmt | block))?
     pub fn if_state(&mut self) -> Node {
         let node: Node;
-        let then: Node = self.stmt();
+        let then: Node = { if self.tokens.check(String::from("{")) {
+                self.block()
+            } else {
+                self.stmt()
+            }
+        };
         let kind: &token::TokenKind = &self.tokens.get_token().kind;
         if matches!(kind, token::TokenKind::TK_ELSE) {
             self.tokens.next();
-            node = new_node(NodeKind::ND_IFIN, then, self.stmt(), None::<i32>, None::<String>);
+            let else_node: Node = { if self.tokens.check(String::from("{")) {
+                    self.block()
+                } else {
+                    self.stmt()
+                }
+            };
+            node = new_node(NodeKind::ND_IFIN, then, else_node, None::<i32>, None::<String>);
         } else {
             node = new_node_alone(NodeKind::ND_IFIN, then, None::<i32>, None::<String>);
         }
@@ -158,15 +174,27 @@ impl Parser {
         node
     }
 
-    // for = expr? ")" stmt
+    // for = expr? ")" (stmt | block)
     pub fn for2(&mut self) -> Node {
         let node: Node;
         if self.tokens.consume(String::from(")")) {
-            node = new_node_alone2(NodeKind::ND_FOR3, self.stmt(), None::<i32>, None::<String>);
+            let exec_node: Node = { if self.tokens.check(String::from("{")) {
+                    self.block()
+                } else {
+                    self.stmt()
+                }
+            };
+            node = new_node_alone2(NodeKind::ND_FOR3, exec_node), None::<i32>, None::<String>);
         } else {
             let inc: Node = self.expr();
             self.tokens.expect(String::from(")"));
-            node = new_node(NodeKind::ND_FOR3, inc, self.stmt(), None::<i32>, None::<String>);
+            let exec_node: Node = { if self.tokens.check(String::from("{")) {
+                    self.block()
+                } else {
+                    self.stmt()
+                }
+            };
+            node = new_node(NodeKind::ND_FOR3, inc, self.exec_node, None::<i32>, None::<String>);
         }
         node
     }

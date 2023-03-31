@@ -134,6 +134,18 @@ impl Tokens {
         }
     }
 
+    // 次のトークンが期待している記号の時には、trueを返す
+    // それ以外の場合にはfalseを返す
+    // トークンは進めない
+    pub fn check(&mut self, op: String) -> bool {
+        let token: &Token = self.get_token();
+        if !matches!(token.kind, TokenKind::TK_RESERVED) || token.s != op {
+            false
+        } else { 
+            true 
+        }
+    }
+
     // トークンを1つ読み進める
     pub fn next(&mut self) {
         self.idx += 1;
