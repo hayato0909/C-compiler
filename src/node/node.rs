@@ -20,7 +20,7 @@ pub enum NodeKind {
     ND_FOR3, // for文 (lhs: 更新式, rhs: for実行文ノード)
     ND_BLOCK, // ブロック (lhs: ブロック内部のノード, rhs: 次のノード)
     ND_CALL, // 関数呼び出し (lhs: 引数の連結ノード)
-    ND_FUNC, // 関数定義 (lhs: block, name: 関数名)
+    ND_FUNC, // 関数定義 (lhs: block, val: 引数の個数, name: 関数名)
 }
 
 pub struct Node {

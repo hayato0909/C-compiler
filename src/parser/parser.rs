@@ -45,7 +45,7 @@ impl Parser {
                 break;
             }
         }
-        new_node_alone(NodeKind::ND_FUNC, self.block(), None, Some(name))
+        new_node_alone(NodeKind::ND_FUNC, self.block(), Some(self.locals.len() as i32), Some(name))
     }
 
     // block = "{" stmt* "}"
@@ -184,7 +184,7 @@ impl Parser {
                     self.stmt()
                 }
             };
-            node = new_node_alone2(NodeKind::ND_FOR3, exec_node), None::<i32>, None::<String>);
+            node = new_node_alone2(NodeKind::ND_FOR3, exec_node, None::<i32>, None::<String>);
         } else {
             let inc: Node = self.expr();
             self.tokens.expect(String::from(")"));
@@ -194,7 +194,7 @@ impl Parser {
                     self.stmt()
                 }
             };
-            node = new_node(NodeKind::ND_FOR3, inc, self.exec_node, None::<i32>, None::<String>);
+            node = new_node(NodeKind::ND_FOR3, inc, exec_node, None::<i32>, None::<String>);
         }
         node
     }

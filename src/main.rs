@@ -139,11 +139,18 @@ fn gen(node: node::Node) {
             return;
         },
         node::NodeKind::ND_FUNC => {
+            let regs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
             println!(".globl {}", node.name.clone().unwrap());
             println!("{}:", node.name.unwrap());
             println!("  push rbp");
             println!("  mov rbp, rsp");
             println!("  sub rsp, 208");
+
+            // 引数をスタックにプッシュ
+            let args_num: i32 = node.val.unwrap();
+            for i in 0..args_num {
+                println!("  mov [rbp-{}], {}", 8 * (i + 1), regs[i as usize]);
+            }
 
             gen(*node.lhs.unwrap());
 
