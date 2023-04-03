@@ -275,11 +275,19 @@ impl Parser {
     }
 
     // unary = ("+" | "-")? primary
+    //      | "*" unary
+    //      | "&" unary
     pub fn unary(&mut self) -> Node {
         if self.tokens.consume(String::from("+")) {
             return self.primary();
         } else if self.tokens.consume(String::from("-")) {
             let node = new_node(NodeKind::ND_SUB, new_node_num(0), self.primary(), None::<i32>, None::<String>);
+            return node;
+        } else if self.tokens.consume(String::from("*")) {
+            let node = new_node_alone(NodeKind::ND_DEREF, self.unary(), None::<i32>, None::<String>);
+            return node;
+        } else if self.tokens.consume(String::from("&")) {
+            let node = new_node_alone(NodeKind::ND_ADDR, self.unary(), None::<i32>, None::<String>);
             return node;
         } else {
             return self.primary();

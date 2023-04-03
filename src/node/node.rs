@@ -21,6 +21,8 @@ pub enum NodeKind {
     ND_BLOCK, // ブロック (lhs: ブロック内部のノード, rhs: 次のノード)
     ND_CALL, // 関数呼び出し (lhs: 引数の連結ノード)
     ND_FUNC, // 関数定義 (lhs: block, val: 引数の個数, name: 関数名)
+    ND_ADDR, // アドレス演算子 (&)
+    ND_DEREF, // ポインタ演算子 (*)
 }
 
 pub struct Node {

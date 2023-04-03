@@ -161,6 +161,17 @@ fn gen(node: node::Node) {
             println!("");
             return;
         },
+        node::NodeKind::ND_ADDR => {
+            gen_lval(*node.lhs.unwrap());
+            return;
+        },
+        node::NodeKind::ND_DEREF => {
+            gen(*node.lhs.unwrap());
+            println!("  pop rax");
+            println!("  mov rax, [rax]");
+            println!("  push rax");
+            return;
+        },
         _ => {},
     }
 
