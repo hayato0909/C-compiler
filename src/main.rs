@@ -135,6 +135,7 @@ fn gen(node: node::Node) {
                 arg_node = *arg_node.rhs.unwrap();
             }
             println!("  call {}", node.name.unwrap());
+            println!("  push rax");
             return;
         },
         node::NodeKind::ND_FUNC => {
