@@ -9,6 +9,7 @@ pub enum TokenKind {
     TK_ELSE,
     TK_WHILE,
     TK_FOR,
+    TK_INT,
 }
 
 pub struct Token {
@@ -76,6 +77,7 @@ impl Tokens {
                     "else" => { token = Token{kind:TokenKind::TK_ELSE, val:None, s:var.clone()}; },
                     "while" => { token = Token{kind:TokenKind::TK_WHILE, val:None, s:var.clone()}; },
                     "for" => { token = Token{kind:TokenKind::TK_FOR, val:None, s:var.clone()}; },
+                    "int" => { token = Token{kind:TokenKind::TK_INT, val:None, s:var.clone()}; },
                     _ => { token = Token{kind:TokenKind::TK_IDENT, val:None, s:var.clone()}; },
                 }
                 self.add_token(token);
@@ -134,6 +136,19 @@ impl Tokens {
         }
     }
 
+    // 次のトークンが期待している型名の場合は、trueを返す
+    // それ以外の場合にはfalseを返す
+    #[allow(unused_variables)]
+    pub fn consume_type(&mut self, s: String) -> bool {
+        let token: &Token = self.get_token();
+        if !matches!(&token.s, s) {
+            false
+        } else {
+            self.idx += 1;
+            true
+        }
+    }
+
     // 次のトークンが期待している記号の時には、trueを返す
     // それ以外の場合にはfalseを返す
     // トークンは進めない
@@ -181,5 +196,7 @@ impl Tokens {
         self.idx += 1;
         val
     }
+
+    // 
 }
 

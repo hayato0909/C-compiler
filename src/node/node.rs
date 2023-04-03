@@ -23,6 +23,7 @@ pub enum NodeKind {
     ND_FUNC, // 関数定義 (lhs: block, val: 引数の個数, name: 関数名)
     ND_ADDR, // アドレス演算子 (&)
     ND_DEREF, // ポインタ演算子 (*)
+    ND_VARDEF, // 変数定義 (name: 変数名)
 }
 
 pub struct Node {

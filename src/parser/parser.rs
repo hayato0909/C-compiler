@@ -23,9 +23,10 @@ impl Parser {
         funcs
     }
     
-    // func = ident "(" ident* ")" block
+    // func = "int" ident "(" ("int" ident)* ")" block
     #[allow(unused_variables)]
     pub fn function(&mut self) -> Node {
+        self.tokens.consume_type(String::from("int"));
         let name: String = { match self.tokens.consume_ident() {
             Some(s) => s, 
             None => panic!("関数名がありません"),
@@ -33,6 +34,7 @@ impl Parser {
         self.tokens.expect(String::from("("));
         let args: Vec<Node> = Vec::new();
         while !self.tokens.consume(String::from(")")) {
+            self.tokens.consume_type(String::from("int"));
             // 変数文字列の一覧に追加していく
             let arg: String = { match self.tokens.consume_ident() {
                 Some(s) => s, 
@@ -70,7 +72,8 @@ impl Parser {
     //     | "while" "(" expr ")" (stmt | block) 
     //     | "for" "(" expr? ";" for1
     //     | "{" stmt* "}"
-    //      |  expr ";"
+    //     |  expr ";"
+    //     | "int" ident ";"
     pub fn stmt(&mut self) -> Node {
         let mut node: Node;
         let kind: &token::TokenKind = &self.tokens.get_token().kind;
@@ -112,6 +115,20 @@ impl Parser {
                     node = new_node(NodeKind::ND_FOR1, init, self.for1(), Some(self.cnt), None::<String>);
                 }
                 self.cnt += 1;
+            },
+            token::TokenKind::TK_INT => {
+                self.tokens.next();
+                let name: String = { match self.tokens.consume_ident() {
+                    Some(s) => s, 
+                    None => panic!("変数名がありません"),
+                }};
+                self.tokens.expect(String::from(";"));
+
+                // すでに宣言されている文字列の場合
+                
+                // 変数文字列の一覧に追加
+                self.locals.push(name.clone());
+                node = new_node_nothing(NodeKind::ND_VARDEF, None::<i32>, Some(name));
             },
             _ => {
                 if self.tokens.consume(String::from("{")) {
@@ -357,7 +374,8 @@ impl Parser {
                 return Some((i as i32+1)*8);
             }
         }
-        return None;
+        // 宣言されていない場合はエラー
+        panic!("{} is not declared", var);
     }
 }
 
