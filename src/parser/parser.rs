@@ -7,6 +7,17 @@ pub struct Parser {
     cnt: i32, // if, while, for文の数
 }
 
+pub enum Type {
+    Int,
+    Pointer,
+}
+
+pub struct Pointer {
+    pub next: Option<Box<Pointer>>,
+    pub ty: Type,
+}
+
+
 impl Parser {
     pub fn new(tokens: token::Tokens) -> Self {
         Parser{tokens:tokens, locals:Vec::<String>::new(), cnt:0}
@@ -73,7 +84,7 @@ impl Parser {
     //     | "for" "(" expr? ";" for1
     //     | "{" stmt* "}"
     //     |  expr ";"
-    //     | "int" ident ";"
+    //     | "int" "*"* ident ";"
     pub fn stmt(&mut self) -> Node {
         let mut node: Node;
         let kind: &token::TokenKind = &self.tokens.get_token().kind;
@@ -118,17 +129,38 @@ impl Parser {
             },
             token::TokenKind::TK_INT => {
                 self.tokens.next();
-                let name: String = { match self.tokens.consume_ident() {
-                    Some(s) => s, 
-                    None => panic!("変数名がありません"),
-                }};
-                self.tokens.expect(String::from(";"));
+                if self.tokens.consume(String::from("*")) {
+                    // ポインタ変数の場合
+                    node = new_node_nothing(NodeKind::ND_DEREF, None::<i32>, None::<String>);
+                    while self.tokens.consume(String::from("*")) {
+                        node = new_node_alone(NodeKind::ND_DEREF, node, None::<i32>, None::<String>);
+                    }
+                    // 変数名を取得
+                    let name: String = { match self.tokens.consume_ident() {
+                        Some(s) => s,
+                        None => panic!("変数名がありません"),
+                    }};
+                    self.tokens.expect(String::from(";"));
+                    // すでに宣言されている文字列の場合
 
-                // すでに宣言されている文字列の場合
+                    // 変数文字列の一覧に追加
+                    self.locals.push(name.clone());
+                    node = new_node_alone(NodeKind::ND_VARDEF, node, Some(self.locals.len() as i32), Some(name));
+                } else {
+                    // ポインタ変数でない場合
+                    // 変数名を取得
+                    let name: String = { match self.tokens.consume_ident() {
+                        Some(s) => s, 
+                        None => panic!("変数名がありません"),
+                    }};
+                    self.tokens.expect(String::from(";"));
+
+                    // すでに宣言されている文字列の場合
                 
-                // 変数文字列の一覧に追加
-                self.locals.push(name.clone());
-                node = new_node_nothing(NodeKind::ND_VARDEF, None::<i32>, Some(name));
+                    // 変数文字列の一覧に追加
+                    self.locals.push(name.clone());
+                    node = new_node_nothing(NodeKind::ND_VARDEF, Some(self.locals.len() as i32), Some(name));
+                }
             },
             _ => {
                 if self.tokens.consume(String::from("{")) {
